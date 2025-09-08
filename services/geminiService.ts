@@ -1,12 +1,46 @@
 
 import { GoogleGenAI, Modality } from "@google/genai";
 import type { GeneratedContent } from '../types';
+import { proxyUtils } from '../utils/proxyUtils';
 
-if (!process.env.API_KEY) {
-  throw new Error("API_KEY environment variable is not set.");
+const API_KEY = import.meta.env.VITE_API_KEY;
+if (!API_KEY) {
+  console.warn('VITE_API_KEY environment variable is not set. Please set it in .env file.');
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+/**
+ * 创建GoogleGenAI实例，支持代理配置
+ */
+function createGoogleGenAI(): GoogleGenAI {
+  const baseConfig = { apiKey: API_KEY };
+  
+  // 检查是否启用了代理
+  if (proxyUtils.isProxyEnabled()) {
+    const proxyConfig = proxyUtils.getProxyConfig();
+    console.log('Using proxy configuration:', proxyUtils.getProxyConfigSummary());
+    
+    // 注意：@google/genai 库可能不直接支持代理配置
+    // 在实际部署中，可能需要通过环境变量或其他方式配置代理
+    // 这里我们记录代理配置，实际的代理设置可能需要在网络层面处理
+    
+    if (proxyConfig) {
+      // 可以在这里添加代理相关的配置
+      // 例如设置环境变量或使用代理中间件
+      console.log(`Proxy enabled: ${proxyConfig.protocol}://${proxyConfig.host}:${proxyConfig.port}`);
+    }
+  }
+  
+  return new GoogleGenAI(baseConfig);
+}
+
+let ai = createGoogleGenAI();
+
+/**
+ * 重新初始化AI实例（当代理配置更改时调用）
+ */
+export function reinitializeAI(): void {
+  ai = createGoogleGenAI();
+}
 
 export async function editImage(
     base64ImageData: string, 

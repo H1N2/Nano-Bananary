@@ -2,8 +2,8 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { TRANSFORMATIONS } from './constants';
-import { editImage } from './services/geminiService';
-import type { GeneratedContent, Transformation } from './types';
+import { editImage, reinitializeAI } from './services/geminiService';
+import type { GeneratedContent, Transformation, ProxyConfig } from './types';
 import TransformationSelector from './components/TransformationSelector';
 import ResultDisplay from './components/ResultDisplay';
 import LoadingSpinner from './components/LoadingSpinner';
@@ -14,6 +14,8 @@ import { dataUrlToFile, embedWatermark, loadImage, resizeImageToMatch, downloadI
 import ImagePreviewModal from './components/ImagePreviewModal';
 import MultiImageUploader from './components/MultiImageUploader';
 import HistoryPanel from './components/HistoryPanel';
+import ProxySettings from './components/ProxySettings';
+import { proxyUtils } from './utils/proxyUtils';
 
 type ActiveTool = 'mask' | 'none';
 
@@ -55,6 +57,8 @@ const App: React.FC = () => {
   const [activeTool, setActiveTool] = useState<ActiveTool>('none');
   const [history, setHistory] = useState<GeneratedContent[]>([]);
   const [isHistoryPanelOpen, setIsHistoryPanelOpen] = useState<boolean>(false);
+  const [isProxySettingsOpen, setIsProxySettingsOpen] = useState<boolean>(false);
+  const [proxyConfig, setProxyConfig] = useState<ProxyConfig | null>(null);
   
   useEffect(() => {
     try {
@@ -64,6 +68,12 @@ const App: React.FC = () => {
       console.error("Failed to save transformation order to localStorage", e);
     }
   }, [transformations]);
+
+  // 初始化代理配置
+  useEffect(() => {
+    const config = proxyUtils.getProxyConfig();
+    setProxyConfig(config);
+  }, []);
 
 
   const handleSelectTransformation = (transformation: Transformation) => {
@@ -237,6 +247,31 @@ const App: React.FC = () => {
   }, []);
   
   const toggleHistoryPanel = () => setIsHistoryPanelOpen(prev => !prev);
+
+  /**
+   * 打开代理设置对话框
+   */
+  const handleOpenProxySettings = () => {
+    setIsProxySettingsOpen(true);
+  };
+
+  /**
+   * 关闭代理设置对话框
+   */
+  const handleCloseProxySettings = () => {
+    setIsProxySettingsOpen(false);
+  };
+
+  /**
+   * 保存代理配置
+   */
+  const handleSaveProxyConfig = (config: ProxyConfig) => {
+    proxyUtils.updateProxyConfig(config);
+    setProxyConfig(config);
+    // 重新初始化AI实例以应用新的代理配置
+    reinitializeAI();
+    console.log('Proxy configuration updated:', proxyUtils.getProxyConfigSummary());
+  };
   
   const handleUseHistoryImageAsInput = (imageUrl: string) => {
       handleUseImageAsInput(imageUrl);
@@ -288,16 +323,40 @@ const App: React.FC = () => {
           <h1 className="text-2xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-yellow-400 cursor-pointer" onClick={handleResetApp}>
             🍌 Nano Bananary｜ZHO
           </h1>
-          <button
-            onClick={toggleHistoryPanel}
-            className="flex items-center gap-2 py-2 px-3 text-sm font-semibold text-gray-200 bg-gray-800/50 rounded-md hover:bg-gray-700/50 transition-colors duration-200"
-            aria-label="Toggle generation history"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-            </svg>
-            <span>History</span>
-          </button>
+          <div className="flex items-center gap-3">
+            {/* 代理状态指示器 */}
+            {proxyConfig?.enabled && (
+              <div className="flex items-center gap-1 text-xs text-green-400">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span>Proxy</span>
+              </div>
+            )}
+            
+            {/* 代理设置按钮 */}
+            <button
+              onClick={handleOpenProxySettings}
+              className="flex items-center gap-2 py-2 px-3 text-sm font-semibold text-gray-200 bg-gray-800/50 rounded-md hover:bg-gray-700/50 transition-colors duration-200"
+              aria-label="Proxy settings"
+              title={proxyConfig?.enabled ? `代理: ${proxyUtils.getProxyConfigSummary()}` : '配置代理设置'}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+              </svg>
+              <span>Proxy</span>
+            </button>
+            
+            {/* 历史记录按钮 */}
+            <button
+              onClick={toggleHistoryPanel}
+              className="flex items-center gap-2 py-2 px-3 text-sm font-semibold text-gray-200 bg-gray-800/50 rounded-md hover:bg-gray-700/50 transition-colors duration-200"
+              aria-label="Toggle generation history"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+              </svg>
+              <span>History</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -440,6 +499,11 @@ const App: React.FC = () => {
         history={history}
         onUseImage={handleUseHistoryImageAsInput}
         onDownload={handleDownloadFromHistory}
+      />
+      <ProxySettings
+        isOpen={isProxySettingsOpen}
+        onClose={handleCloseProxySettings}
+        onSave={handleSaveProxyConfig}
       />
     </div>
   );

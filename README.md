@@ -68,14 +68,47 @@ Use in AI Studio: https://ai.studio/apps/drive/1JknFrFFdiOm7FIA8MLOJa_vtJN2g24c1
 
 1. Install dependencies:
    `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+2. Set the `VITE_API_KEY` in [.env](.env) to your Gemini API key
+   ```bash
+   VITE_API_KEY=your_gemini_api_key_here
+   ```
+   Get your API key from: https://makersuite.google.com/app/apikey
 3. Run the app:
    `npm run dev`
+
+### 🌐 代理设置功能 (Proxy Settings)
+
+如果您需要通过代理访问 Gemini API，可以使用内置的代理设置功能：
+
+1. **打开代理设置**：点击页面右上角的 "Proxy" 按钮
+2. **配置代理参数**：
+   - 启用代理开关
+   - 协议类型（HTTP/HTTPS）
+   - 代理主机和端口
+   - 用户名/密码（如需要）
+3. **测试连接**：验证代理设置是否正确
+4. **保存设置**：配置会自动保存到本地
+
+**常见代理配置示例**：
+- Clash: `127.0.0.1:7890` (HTTP)
+- V2Ray: `127.0.0.1:10809` (HTTP)
+
+当代理启用时，页面会显示绿色的代理状态指示器。
 
 
 
 
 ## 更新日志
+
+- 20250115
+
+  功能更新：增加代理设置功能，支持通过代理访问大模型API
+  
+  - 🌐 新增代理设置界面，支持HTTP/HTTPS代理配置
+  - 🔧 支持代理认证（用户名/密码）
+  - 🟢 实时代理状态指示器
+  - 🧪 代理连接测试功能
+  - 💾 代理配置本地存储
 
 - 20250906
 

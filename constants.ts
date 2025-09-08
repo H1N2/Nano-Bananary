@@ -11,7 +11,7 @@ export const TRANSFORMATIONS: Transformation[] = [
   },
   { 
     title: "3D Figurine", 
-    prompt: "turn this photo into a character figure. Behind it, place a box with the character’s image printed on it, and a computer showing the Blender modeling process on its screen. In front of the box, add a round plastic base with the character figure standing on it. set the scene indoors if possible", 
+    prompt: "Use the nano-banana model to create a 1/7 scale commercialized figure of the character in the illustration, in a realistic styie and environment.Place the figure on a computer desk, using a circular transparent acrylic base without any text.On the computer screen, display the ZBrush modeling process of the figure.Next to the computer screen, place a BANDAl-style toy packaging box printedwith the original artwork.", 
     emoji: "🧍",
     description: "Turns your photo into a collectible 3D character figurine, complete with packaging."
   },

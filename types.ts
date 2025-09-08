@@ -16,5 +16,13 @@ export interface Transformation {
 export interface GeneratedContent {
   imageUrl: string | null;
   text: string | null;
-  secondaryImageUrl?: string | null;
+}
+
+export interface ProxyConfig {
+  enabled: boolean;
+  host: string;
+  port: number;
+  username?: string;
+  password?: string;
+  protocol: 'http' | 'https' | 'socks4' | 'socks5';
 }
